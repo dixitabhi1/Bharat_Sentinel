@@ -1,5 +1,8 @@
 from typing import Dict, Any, List, Optional
-from ..skills_loader import skills_registry
+try:
+    from ..skills_loader import skills_registry
+except (ImportError, ValueError):
+    from skills_loader import skills_registry
 
 class IndiaImpactClassifier:
     """

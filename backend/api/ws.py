@@ -3,8 +3,12 @@ import json
 import time
 from typing import List, Set
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from ..db.database import db
-from ..ingestion.flights_proxy import flight_proxy
+try:
+    from ..db.database import db
+    from ..ingestion.flights_proxy import flight_proxy
+except (ImportError, ValueError):
+    from db.database import db
+    from ingestion.flights_proxy import flight_proxy
 
 router = APIRouter()
 

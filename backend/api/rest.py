@@ -2,13 +2,22 @@ import uuid
 from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Query
 from typing import List, Dict, Any, Optional
-from ..db.database import db
-from ..agents.chatbot_agent import chatbot_agent
-from ..agents.orchestrator import orchestrator
-from ..skills_loader import skills_registry
-from ..geofence.prefilter import geofence_engine
-from ..ingestion.flights_proxy import flight_proxy
-from ..ingestion.installations_osm import osm_installations
+try:
+    from ..db.database import db
+    from ..agents.chatbot_agent import chatbot_agent
+    from ..agents.orchestrator import orchestrator
+    from ..skills_loader import skills_registry
+    from ..geofence.prefilter import geofence_engine
+    from ..ingestion.flights_proxy import flight_proxy
+    from ..ingestion.installations_osm import osm_installations
+except (ImportError, ValueError):
+    from db.database import db
+    from agents.chatbot_agent import chatbot_agent
+    from agents.orchestrator import orchestrator
+    from skills_loader import skills_registry
+    from geofence.prefilter import geofence_engine
+    from ingestion.flights_proxy import flight_proxy
+    from ingestion.installations_osm import osm_installations
 
 router = APIRouter(prefix="/api")
 

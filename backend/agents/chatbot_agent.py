@@ -1,7 +1,11 @@
 import os
 from typing import Dict, Any, List, Optional
-from ..skills_loader import skills_registry
-from ..db.database import db
+try:
+    from ..skills_loader import skills_registry
+    from ..db.database import db
+except (ImportError, ValueError):
+    from skills_loader import skills_registry
+    from db.database import db
 
 class ChatbotAgent:
     """

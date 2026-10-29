@@ -1,13 +1,22 @@
 import uuid
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
-from ..geofence.prefilter import geofence_engine
-from .flight_anomaly_agent import flight_anomaly_agent
-from .naval_agent import naval_agent
-from .troop_buildup_agent import troop_buildup_agent
-from .leader_statement_agent import leader_statement_agent
-from .india_impact_classifier import india_impact_classifier
-from ..db.database import db
+try:
+    from ..geofence.prefilter import geofence_engine
+    from .flight_anomaly_agent import flight_anomaly_agent
+    from .naval_agent import naval_agent
+    from .troop_buildup_agent import troop_buildup_agent
+    from .leader_statement_agent import leader_statement_agent
+    from .india_impact_classifier import india_impact_classifier
+    from ..db.database import db
+except (ImportError, ValueError):
+    from geofence.prefilter import geofence_engine
+    from agents.flight_anomaly_agent import flight_anomaly_agent
+    from agents.naval_agent import naval_agent
+    from agents.troop_buildup_agent import troop_buildup_agent
+    from agents.leader_statement_agent import leader_statement_agent
+    from agents.india_impact_classifier import india_impact_classifier
+    from db.database import db
 
 class OrchestratorAgent:
     """

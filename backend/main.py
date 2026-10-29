@@ -1,22 +1,37 @@
 import os
-import uvicorn
+import sys
 from pathlib import Path
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 
-from .api.rest import router as rest_router
-from .api.ws import router as ws_router
-from .skills_loader import skills_registry
-from .geofence.prefilter import geofence_engine
+# Ensure both backend directory and parent directory are on sys.path
+backend_dir = Path(__file__).resolve().parent
+if str(backend_dir) not in sys.path:
+    sys.path.insert(0, str(backend_dir))
+if str(backend_dir.parent) not in sys.path:
+    sys.path.insert(0, str(backend_dir.parent))
+
+try:
+    from .api.rest import router as rest_router
+    from .api.ws import router as ws_router
+    from .skills_loader import skills_registry
+    from .geofence.prefilter import geofence_engine
+except (ImportError, ValueError):
+    from api.rest import router as rest_router
+    from api.ws import router as ws_router
+    from skills_loader import skills_registry
+    from geofence.prefilter import geofence_engine
 
 app = FastAPI(
     title="Bharat Sentinel API",
     description="Live Global & Regional Intelligence & Multi-Agent Situational-Awareness Platform",
-    version="1.0.0"
+    version="1.0.0",
+    docs_url="/api/docs",
+    openapi_url="/api/openapi.json"
 )
 
-# Enable CORS for frontend development
+# Enable CORS for frontend development and Vercel services deployment
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -41,4 +56,4 @@ async def startup_event():
     print("================================================================")
 
 if __name__ == "__main__":
-    uvicorn.run("backend.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

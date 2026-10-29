@@ -3,7 +3,10 @@ import httpx
 import asyncio
 from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
-from ..db.database import db
+try:
+    from ..db.database import db
+except (ImportError, ValueError):
+    from db.database import db
 
 AIRLINE_ICAO_MAP = {
     "IGO": "IndiGo Airlines",

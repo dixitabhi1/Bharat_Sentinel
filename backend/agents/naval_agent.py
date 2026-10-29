@@ -3,7 +3,10 @@ Naval Intelligence Specialist Agent.
 Monitors maritime telemetry, carrier strike groups, and EEZ incursions.
 """
 from typing import Dict, Any, List, Optional
-from ..db.database import db
+try:
+    from ..db.database import db
+except (ImportError, ValueError):
+    from db.database import db
 
 class NavalIntelligenceAgent:
     def __init__(self):
