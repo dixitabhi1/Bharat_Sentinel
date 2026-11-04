@@ -183,7 +183,7 @@ class HighDensityGlobalFlightEngine:
     def __init__(self, cache_ttl_seconds: float = 10.0):
         self.cache_ttl = cache_ttl_seconds
         self._cached_flights: List[Dict[str, Any]] = []
-        self._last_fetch_time: float = 0.0
+        self._last_fetch_time: float = time.time()
         self._is_refreshing: bool = False
         self._provider_status: Dict[str, Any] = {
             "status": "operational",

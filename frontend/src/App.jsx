@@ -54,52 +54,63 @@ export default function App() {
     }
   };
 
-  // Fetch all core intelligence streams
-  const refreshAllData = async () => {
-    try {
-      const [
-        statsRes, 
-        fleetsRes, 
-        leadersRes, 
-        flightsRes, 
-        vesselsRes, 
-        disastersRes, 
-        installationsRes,
-        tickerRes, 
-        geoRes, 
-        queueRes
-      ] = await Promise.all([
-        fetch(getApiUrl(`/api/stats?scope=${scope}`)),
-        fetch(getApiUrl(`/api/fleets?scope=${scope}`)),
-        fetch(getApiUrl(`/api/leaders?scope=${scope}`)),
-        fetch(getApiUrl(`/api/flights?scope=${scope}`)),
-        fetch(getApiUrl(`/api/vessels?scope=${scope}`)),
-        fetch(getApiUrl(`/api/disasters?scope=${scope}`)),
-        fetch(getApiUrl("/api/installations")),
-        fetch(getApiUrl("/api/news-ticker")),
-        fetch(getApiUrl("/api/geofence")),
-        fetch(getApiUrl("/api/review-queue"))
-      ]);
+  // Fetch all core intelligence streams concurrently without blocking
+  const refreshAllData = () => {
+    fetch(getApiUrl(`/api/stats?scope=${scope}`))
+      .then(r => r.ok ? r.json() : null)
+      .then(d => d && setStats(d))
+      .catch(err => console.error("Stats stream error:", err));
 
-      if (statsRes.ok) setStats(await statsRes.json());
-      if (fleetsRes.ok) setFleets(await fleetsRes.json());
-      if (leadersRes.ok) setLeaders(await leadersRes.json());
-      if (flightsRes.ok) setFlights(await flightsRes.json());
-      if (vesselsRes.ok) setVessels(await vesselsRes.json());
-      if (disastersRes.ok) setDisasters(await disastersRes.json());
-      if (installationsRes.ok) setInstallations(await installationsRes.json());
-      if (tickerRes.ok) setNewsTicker(await tickerRes.json());
-      if (geoRes.ok) setGeofence(await geoRes.json());
-      if (queueRes.ok) setReviewQueue(await queueRes.json());
-    } catch (e) {
-      console.error("Error refreshing intelligence data:", e);
-    }
+    fetch(getApiUrl(`/api/fleets?scope=${scope}`))
+      .then(r => r.ok ? r.json() : null)
+      .then(d => d && setFleets(d))
+      .catch(err => console.error("Fleets stream error:", err));
+
+    fetch(getApiUrl(`/api/leaders?scope=${scope}`))
+      .then(r => r.ok ? r.json() : null)
+      .then(d => d && setLeaders(d))
+      .catch(err => console.error("Leaders stream error:", err));
+
+    fetch(getApiUrl("/api/installations"))
+      .then(r => r.ok ? r.json() : null)
+      .then(d => d && setInstallations(d))
+      .catch(err => console.error("Installations stream error:", err));
+
+    fetch(getApiUrl("/api/news-ticker"))
+      .then(r => r.ok ? r.json() : null)
+      .then(d => d && setNewsTicker(d))
+      .catch(err => console.error("News ticker error:", err));
+
+    fetch(getApiUrl(`/api/vessels?scope=${scope}`))
+      .then(r => r.ok ? r.json() : null)
+      .then(d => d && setVessels(d))
+      .catch(err => console.error("Vessels stream error:", err));
+
+    fetch(getApiUrl(`/api/disasters?scope=${scope}`))
+      .then(r => r.ok ? r.json() : null)
+      .then(d => d && setDisasters(d))
+      .catch(err => console.error("Disasters stream error:", err));
+
+    fetch(getApiUrl("/api/geofence"))
+      .then(r => r.ok ? r.json() : null)
+      .then(d => d && setGeofence(d))
+      .catch(err => console.error("Geofence stream error:", err));
+
+    fetch(getApiUrl("/api/review-queue"))
+      .then(r => r.ok ? r.json() : null)
+      .then(d => d && setReviewQueue(d))
+      .catch(err => console.error("Review queue error:", err));
+
+    fetch(getApiUrl(`/api/flights?scope=${scope}`))
+      .then(r => r.ok ? r.json() : null)
+      .then(d => d && setFlights(d))
+      .catch(err => console.error("Flights stream error:", err));
   };
 
   useEffect(() => {
     refreshAllData();
     fetchEvents();
-    const interval = setInterval(refreshAllData, 12000);
+    const interval = setInterval(refreshAllData, 8000);
 
     // Live WebSocket connection for continuous real-time movement and events
     let ws;
