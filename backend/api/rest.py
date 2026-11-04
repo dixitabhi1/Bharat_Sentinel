@@ -205,6 +205,7 @@ def get_skills():
     return {k: v.to_dict() for k, v in skills_registry.skills.items()}
 
 @router.post("/chat")
+@router.post("/chatbot/query")
 async def chat_with_analyst(payload: Dict[str, Any]):
     query = payload.get("query", "")
     if not query:

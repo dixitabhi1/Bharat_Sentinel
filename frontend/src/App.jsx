@@ -1,3 +1,4 @@
+import { getApiUrl, getWsUrl } from "./apiConfig";
 import React, { useState, useEffect } from "react";
 import SplashScreen from "./components/SplashScreen";
 import Header from "./components/Header";
@@ -46,7 +47,7 @@ export default function App() {
       if (searchQuery) params.append("search", searchQuery);
       if (scope) params.append("scope", scope);
 
-      const res = await fetch(`/api/events?${params.toString()}`);
+      const res = await fetch(getApiUrl(`/api/events?${params.toString()}`));
       if (res.ok) setEvents(await res.json());
     } catch (e) {
       console.error("Error fetching events:", e);
@@ -68,16 +69,16 @@ export default function App() {
         geoRes, 
         queueRes
       ] = await Promise.all([
-        fetch(`/api/stats?scope=${scope}`),
-        fetch(`/api/fleets?scope=${scope}`),
-        fetch(`/api/leaders?scope=${scope}`),
-        fetch(`/api/flights?scope=${scope}`),
-        fetch(`/api/vessels?scope=${scope}`),
-        fetch(`/api/disasters?scope=${scope}`),
-        fetch("/api/installations"),
-        fetch("/api/news-ticker"),
-        fetch("/api/geofence"),
-        fetch("/api/review-queue")
+        fetch(getApiUrl(`/api/stats?scope=${scope}`)),
+        fetch(getApiUrl(`/api/fleets?scope=${scope}`)),
+        fetch(getApiUrl(`/api/leaders?scope=${scope}`)),
+        fetch(getApiUrl(`/api/flights?scope=${scope}`)),
+        fetch(getApiUrl(`/api/vessels?scope=${scope}`)),
+        fetch(getApiUrl(`/api/disasters?scope=${scope}`)),
+        fetch(getApiUrl("/api/installations")),
+        fetch(getApiUrl("/api/news-ticker")),
+        fetch(getApiUrl("/api/geofence")),
+        fetch(getApiUrl("/api/review-queue"))
       ]);
 
       if (statsRes.ok) setStats(await statsRes.json());
@@ -104,7 +105,7 @@ export default function App() {
     let ws;
     try {
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      ws = new WebSocket(`${protocol}//${window.location.host}/ws/live`);
+      ws = new WebSocket(getWsUrl());
       
       ws.onmessage = (event) => {
         try {
@@ -141,7 +142,7 @@ export default function App() {
 
   const handleApproveReview = async (flagId, note) => {
     try {
-      await fetch(`/api/review-queue/${flagId}/approve`, {
+      await fetch(getApiUrl(`/api/review-queue/${flagId}/approve`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ note })
@@ -155,7 +156,7 @@ export default function App() {
 
   const handleRejectReview = async (flagId, note) => {
     try {
-      await fetch(`/api/review-queue/${flagId}/reject`, {
+      await fetch(getApiUrl(`/api/review-queue/${flagId}/reject`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ note })

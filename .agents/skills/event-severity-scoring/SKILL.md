@@ -13,3 +13,4 @@ Categorize multi-domain intelligence signals according to global impact and regi
 - **Tier 2 (Moderate / Watch)**: Diplomatic summoning, non-kinetic border friction, airspace identification intercepts.
 - **Tier 3 (High / Critical Alert)**: Unannounced carrier group deployment, heavy armor buildup at LAC/LoC, GPS spoofing in maritime lanes.
 - **Tier 4 (Major / Red Emergency)**: Kinetic cross-border exchange, vessel seizure, sovereign airspace violation, catastrophic infrastructure failure.
+

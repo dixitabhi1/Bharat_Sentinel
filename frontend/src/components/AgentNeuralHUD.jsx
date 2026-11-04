@@ -1,3 +1,4 @@
+import { getApiUrl } from "../apiConfig";
 import React, { useEffect, useState } from "react";
 import { 
   Cpu, 
@@ -21,7 +22,7 @@ export default function AgentNeuralHUD() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/skills")
+    fetch(getApiUrl("/api/skills"))
       .then(res => res.json())
       .then(data => {
         setSkills(data);

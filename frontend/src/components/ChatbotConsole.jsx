@@ -1,3 +1,4 @@
+import { getApiUrl } from "../apiConfig";
 import React, { useState, useRef, useEffect } from "react";
 import { 
   Bot, 
@@ -128,7 +129,7 @@ export default function ChatbotConsole({ initialPrompt = "" }) {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/chatbot/query", {
+      const res = await fetch(getApiUrl("/api/chatbot/query"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: q })
