@@ -49,6 +49,23 @@ class GeofenceEngine:
         except Exception:
             pass
 
+    def get_geojson(self) -> Dict[str, Any]:
+        """Returns the GeoJSON FeatureCollection representation of strategic geofences."""
+        if self.raw_geojson and self.raw_geojson.get("features"):
+            return self.raw_geojson
+        # Fallback in case raw_geojson was not loaded from disk
+        return {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": {"id": zid, "name": zid.replace("-", " ").title()},
+                    "geometry": None
+                }
+                for zid in self.polygons
+            ]
+        }
+
     def get_matching_zones(self, lat: float, lon: float) -> List[str]:
         matching = []
         if HAS_SHAPELY and self.zones:

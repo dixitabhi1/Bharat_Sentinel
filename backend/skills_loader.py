@@ -27,8 +27,17 @@ class SkillsLoader:
     """
     def __init__(self, skills_root: Optional[Path] = None):
         if skills_root is None:
-            base_dir = Path(__file__).resolve().parent.parent
-            self.skills_root = base_dir / ".agents" / "skills"
+            # Check both workspace root and backend root
+            backend_dir = Path(__file__).resolve().parent
+            candidates = [
+                backend_dir.parent / ".agents" / "skills",
+                backend_dir / ".agents" / "skills",
+            ]
+            self.skills_root = candidates[0]
+            for c in candidates:
+                if c.exists():
+                    self.skills_root = c
+                    break
         else:
             self.skills_root = Path(skills_root)
         
@@ -37,19 +46,33 @@ class SkillsLoader:
 
     def load_all_skills(self) -> Dict[str, SkillMetadata]:
         self.skills.clear()
-        if not self.skills_root.exists():
-            print(f"[SkillsLoader] Warning: Specialist agent skills root not found at {self.skills_root}")
-            return self.skills
-
-        for skill_dir in self.skills_root.iterdir():
-            if skill_dir.is_dir():
-                skill_file = skill_dir / "SKILL.md"
-                if skill_file.exists():
-                    skill = self._parse_skill_file(skill_file)
-                    if skill:
-                        self.skills[skill.name] = skill
         
-        print(f"[SkillsLoader] Successfully loaded {len(self.skills)} specialist skills: {list(self.skills.keys())}")
+        # Search primary and fallback roots
+        candidates = [self.skills_root]
+        backend_dir = Path(__file__).resolve().parent
+        if backend_dir / ".agents" / "skills" not in candidates:
+            candidates.append(backend_dir / ".agents" / "skills")
+        if backend_dir.parent / ".agents" / "skills" not in candidates:
+            candidates.append(backend_dir.parent / ".agents" / "skills")
+
+        loaded = False
+        for root in candidates:
+            if root.exists():
+                for skill_dir in root.iterdir():
+                    if skill_dir.is_dir():
+                        skill_file = skill_dir / "SKILL.md"
+                        if skill_file.exists():
+                            skill = self._parse_skill_file(skill_file)
+                            if skill:
+                                self.skills[skill.name] = skill
+                                loaded = True
+                if loaded:
+                    break
+        
+        if not loaded:
+            print(f"[SkillsLoader] Warning: Specialist agent skills root not found across candidates.")
+        else:
+            print(f"[SkillsLoader] Successfully loaded {len(self.skills)} specialist skills: {list(self.skills.keys())}")
         return self.skills
 
     def _parse_skill_file(self, file_path: Path) -> Optional[SkillMetadata]:
