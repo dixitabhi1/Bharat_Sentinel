@@ -261,6 +261,10 @@ export default function TacticalMap({
         tileSize: 256,
         attribution: "Bharat Sentinel ADS-B Situational Awareness"
       },
+      "geofence-source": {
+        type: "geojson",
+        data: geofence || { type: "FeatureCollection", features: [] }
+      },
       "combat-radius-source": {
         type: "geojson",
         data: { type: "FeatureCollection", features: [] }
@@ -289,6 +293,26 @@ export default function TacticalMap({
         source: "base-raster",
         minzoom: 0,
         maxzoom: 20
+      },
+      {
+        id: "geofence-fill-layer",
+        type: "fill",
+        source: "geofence-source",
+        paint: {
+          "fill-color": ["coalesce", ["get", "color"], "#38BDF8"],
+          "fill-opacity": 0.08
+        }
+      },
+      {
+        id: "geofence-line-layer",
+        type: "line",
+        source: "geofence-source",
+        paint: {
+          "line-color": ["coalesce", ["get", "stroke"], ["get", "color"], "#38BDF8"],
+          "line-width": 2.2,
+          "line-dasharray": [4, 2],
+          "line-opacity": 0.85
+        }
       },
       {
         id: "combat-radius-fill",
@@ -601,7 +625,7 @@ export default function TacticalMap({
   };
 
   // 4. Update Range Rings on Map for Selected Target
-  const updateRangeRings = (item) => {
+  const updateRangeRings = (item, overrideCombat = null, overrideRadar = null) => {
     const map = mapRef.current;
     if (!map) return;
 
@@ -616,32 +640,42 @@ export default function TacticalMap({
       return;
     }
 
-    const lat = item.lat || (item.location ? item.location.lat : null);
-    const lon = item.lon || (item.location ? item.location.lon : null);
+    const lat = Number(item.lat !== undefined ? item.lat : (item.location ? item.location.lat : null));
+    const lon = Number(item.lon !== undefined ? item.lon : (item.location ? item.location.lon : null));
 
-    if (lat === null || lon === null) return;
+    if (isNaN(lat) || isNaN(lon) || lat === null || lon === null) return;
 
-    let combatRadiusKm = item.combat_radius_km;
+    let combatRadiusKm = Number(item.combat_radius_km);
     if (!combatRadiusKm && item.air_wing_strike_radius_nm) {
-      combatRadiusKm = item.air_wing_strike_radius_nm * 1.852;
+      combatRadiusKm = Number(item.air_wing_strike_radius_nm) * 1.852;
     }
 
-    let radarRangeKm = item.radar_range_km || item.radar_coverage_km;
+    let radarRangeKm = Number(item.radar_range_km || item.radar_coverage_km);
 
-    if (combatRadiusKm && showCombatRadius && layerVisibility.combatRanges) {
+    const isCombatOn = overrideCombat !== null ? overrideCombat : showCombatRadius;
+    const isRadarOn = overrideRadar !== null ? overrideRadar : showRadarRange;
+
+    if (combatRadiusKm && isCombatOn && layerVisibility.combatRanges) {
       const multiRingCollection = createMultiRingBoundaries(lat, lon, combatRadiusKm);
       combatSource.setData(multiRingCollection);
     } else {
       combatSource.setData({ type: "FeatureCollection", features: [] });
     }
 
-    if (radarRangeKm && showRadarRange && layerVisibility.combatRanges) {
+    if (radarRangeKm && isRadarOn && layerVisibility.combatRanges) {
       const radarFeat = createGeoJSONCircle(lat, lon, radarRangeKm);
       radarSource.setData({ type: "FeatureCollection", features: [radarFeat] });
     } else {
       radarSource.setData({ type: "FeatureCollection", features: [] });
     }
   };
+
+  // Keep boundary rings reactively synchronized with state toggles
+  useEffect(() => {
+    if (activeModalItem) {
+      updateRangeRings(activeModalItem);
+    }
+  }, [showCombatRadius, showRadarRange, layerVisibility.combatRanges]);
 
   // 5. STABILIZED TELEMETRY MERGER: Exponential Linear Smoothing (LERP) on New Arrivals
   useEffect(() => {
@@ -792,6 +826,16 @@ export default function TacticalMap({
     const isIndiaOnly = scope === "india";
 
     renderFlightsOnMap();
+
+    // Geofence Boundaries GPU Source (LAC, LoC, EEZ, Hormuz, Malacca)
+    const geofenceSource = map.getSource("geofence-source");
+    if (geofenceSource) {
+      if (layerVisibility.geofence && geofence && geofence.features && geofence.features.length > 0) {
+        geofenceSource.setData(geofence);
+      } else {
+        geofenceSource.setData({ type: "FeatureCollection", features: [] });
+      }
+    }
 
     // Vessels GPU Source
     const vesselsSource = map.getSource("vessels-source");
@@ -1010,7 +1054,7 @@ export default function TacticalMap({
   useEffect(() => {
     updateGPUSources();
     renderSpecialDOMMarkers();
-  }, [vessels, events, leaders, installations, disasters, fleets, layerVisibility, scope, selectedCountry, flightTypeFilter]);
+  }, [vessels, events, leaders, installations, disasters, fleets, geofence, layerVisibility, scope, selectedCountry, flightTypeFilter]);
 
   // Center map on selectedItem if provided externally
   useEffect(() => {
@@ -1916,7 +1960,7 @@ export default function TacticalMap({
                     onClick={() => {
                       const next = !showCombatRadius;
                       setShowCombatRadius(next);
-                      updateRangeRings({ ...activeModalItem });
+                      updateRangeRings(activeModalItem, next);
                     }}
                     style={{
                       flex: 1,
@@ -1938,7 +1982,7 @@ export default function TacticalMap({
                     onClick={() => {
                       const next = !showRadarRange;
                       setShowRadarRange(next);
-                      updateRangeRings({ ...activeModalItem });
+                      updateRangeRings(activeModalItem, null, next);
                     }}
                     style={{
                       flex: 1,
@@ -2170,7 +2214,7 @@ export default function TacticalMap({
               onClick={() => {
                 const next = !showCombatRadius;
                 setShowCombatRadius(next);
-                updateRangeRings(activeModalItem);
+                updateRangeRings(activeModalItem, next);
               }}
               style={{
                 padding: "5px 8px",
