@@ -1,9 +1,14 @@
 // Bharat Sentinel Centralized API & WebSocket Configuration
 
+const isLocal = typeof window !== "undefined" && (
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1" ||
+  window.location.hostname === "0.0.0.0"
+);
+
+// Canonical backend URL on Vercel for Bharat_Sentinel repository (translates underscore to double hyphen)
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || (
-  typeof window !== "undefined" && window.location.hostname === "bharatsentinel.vercel.app"
-    ? "https://bharat-sentinel.vercel.app"
-    : ""
+  isLocal ? "" : "https://bharat--sentinel.vercel.app"
 );
 
 export function getApiUrl(endpoint) {
@@ -22,4 +27,3 @@ export function getWsUrl() {
 }
 
 export default { getApiUrl, getWsUrl };
-
