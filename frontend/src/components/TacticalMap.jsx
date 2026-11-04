@@ -1,6 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
+import { setWorkerUrl } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
+
+// Explicitly register the MapLibre web worker URL so Vite bundles and serves the worker correctly
+if (typeof setWorkerUrl === "function") {
+  setWorkerUrl(maplibreWorkerUrl);
+} else if (maplibregl && typeof maplibregl.setWorkerUrl === "function") {
+  maplibregl.setWorkerUrl(maplibreWorkerUrl);
+}
 import { 
   Layers, 
   Plane, 
